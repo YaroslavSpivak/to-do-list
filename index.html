@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Список справ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 400px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-selector {
+            display: flex;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Список справ</h1>
+        <div class="list-selector">
+            <button onclick="switchList(0)">Список 1</button>
+            <button onclick="switchList(1)">Список 2</button>
+            <button onclick="switchList(2)">Список 3</button>
+            <button onclick="switchList(3)">Список 4</button>
+            <button onclick="switchList(4)">Список 5</button>
+        </div>
+        <input type="text" id="task" placeholder="Додати нову справу..."
+            onkeydown="if (event.key === 'Enter') addTask()">
+        <ul id="taskList">
+            <!-- Список завдань буде тут -->
+        </ul>
+    </div>
+    <script>
+        let currentListIndex = 0;
+        const taskInput = document.getElementById("task");
+        const taskList = document.getElementById("taskList");
+        const lists = JSON.parse(localStorage.getItem("lists")) || [[]];
+
+        function addTask() {
+            const taskText = taskInput.value;
+            if (taskText === "") {
+                return;
+            }
+
+            lists[currentListIndex].push({ text: taskText, done: false });
+            updateTaskList();
+            saveListsToLocalStorage();
+            taskInput.value = "";
+        }
+
+        function deleteTask(button) {
+            const listItem = button.parentElement;
+            const index = Array.from(listItem.parentElement.children).indexOf(listItem);
+            lists[currentListIndex].splice(index, 1);
+            updateTaskList();
+            saveListsToLocalStorage();
+        }
+
+        function markAsDone(button) {
+            const listItem = button.parentElement;
+            const index = Array.from(listItem.parentElement.children).indexOf(listItem);
+            lists[currentListIndex][index].done = true;
+            listItem.classList.add("done");
+            button.style.display = "none";
+            saveListsToLocalStorage();
+        }
+
+        function switchList(index) {
+            currentListIndex = index;
+            updateTaskList();
+        }
+
+        function updateTaskList() {
+            const currentList = lists[currentListIndex];
+            taskList.innerHTML = "";
+            currentList.forEach((task, index) => {
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `
+                    <span>${task.text}</span>
+                    <button onclick="deleteTask(this)">Видалити</button>
+                    <button onclick="markAsDone(this)">Виконано</button>
+                `;
+
+                if (task.done) {
+                    listItem.classList.add("done");
+                    listItem.querySelector("button:last-child").style.display = "none";
+                }
+
+                taskList.appendChild(listItem);
+            });
+        }
+
+        function saveListsToLocalStorage() {
+            localStorage.setItem("lists", JSON.stringify(lists));
+        }
+
+        function loadListsFromLocalStorage() {
+            const savedLists = JSON.parse(localStorage.getItem("lists")) || [[]];
+            savedLists.forEach((list, index) => {
+                if (index >= lists.length) {
+                    lists.push(list);
+                } else {
+                    lists[index] = list;
+                }
+            });
+            updateTaskList();
+        }
+
+        loadListsFromLocalStorage();
+    </script>
+</body>
+
+</html>
